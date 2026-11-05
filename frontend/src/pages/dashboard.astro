@@ -1,0 +1,118 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Dashboard - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <!-- Header -->
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
+      <a href="/" class="text-xl font-semibold text-white">Aurevo</a>
+      <div class="flex items-center gap-4">
+        <span id="userName" class="text-sm text-soft/70">User</span>
+        <button id="logoutBtn" class="text-xs text-red-400 hover:underline">Log out</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Overview</h1>
+        <p class="text-soft/50 text-sm">Manage your balances and platform activities</p>
+      </div>
+
+      <!-- 3-Wallet Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <!-- Earnings Wallet -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs text-soft/50 font-medium uppercase tracking-wider">Earnings Balance</span>
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-6h6" />
+            </svg>
+          </div>
+          <p id="earningsBalance" class="text-3xl font-semibold text-white mb-2">₦0.00</p>
+          <p class="text-xs text-soft/40 mb-4">From completed tasks & referrals</p>
+          <a href="/withdraw" class="inline-block text-xs bg-gold/10 text-gold px-3 py-1.5 rounded-lg hover:bg-gold/20 transition-colors">Withdraw &rarr;</a>
+        </div>
+
+        <!-- Credit Wallet -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs text-soft/50 font-medium uppercase tracking-wider">Credit Balance</span>
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+            </svg>
+          </div>
+          <p id="creditBalance" class="text-3xl font-semibold text-white mb-2">₦0.00</p>
+          <p class="text-xs text-soft/40 mb-4">For posting micro-tasks</p>
+          <a href="/topup" class="inline-block text-xs bg-gold/10 text-gold px-3 py-1.5 rounded-lg hover:bg-gold/20 transition-colors">Top-up Credits &rarr;</a>
+        </div>
+
+        <!-- Savings Wallet -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs text-soft/50 font-medium uppercase tracking-wider">Savings (Growth Circle)</span>
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5" />
+            </svg>
+          </div>
+          <p id="savingsBalance" class="text-3xl font-semibold text-white mb-2">₦0.00</p>
+          <p class="text-xs text-soft/40 mb-4">Active plan capital & returns</p>
+          <a href="/plans" class="inline-block text-xs bg-gold/10 text-gold px-3 py-1.5 rounded-lg hover:bg-gold/20 transition-colors">View Plans &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <h2 class="text-lg font-semibold text-white mb-4">Actions</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/tasks" class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-5 transition-colors block">
+          <h3 class="text-white font-medium text-sm mb-1">Browse Tasks</h3>
+          <p class="text-soft/40 text-xs">Perform tasks & earn</p>
+        </a>
+        <a href="/post-task" class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-5 transition-colors block">
+          <h3 class="text-white font-medium text-sm mb-1">Post a Task</h3>
+          <p class="text-soft/40 text-xs">Hire people to engage</p>
+        </a>
+        <a href="/plans" class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-5 transition-colors block">
+          <h3 class="text-white font-medium text-sm mb-1">Growth Plans</h3>
+          <p class="text-soft/40 text-xs">Subscribe to earn automated returns</p>
+        </a>
+        <a href="/referrals" class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-5 transition-colors block">
+          <h3 class="text-white font-medium text-sm mb-1">Referrals</h3>
+          <p class="text-soft/40 text-xs">Invite friends for bonus</p>
+        </a>
+      </div>
+    </main>
+  </div>
+</Base>
+
+<script>
+  const userStr = localStorage.getItem('aurevo_user');
+  const token = localStorage.getItem('aurevo_token');
+
+  if (!userStr || !token) {
+    window.location.href = '/login';
+  } else {
+    const user = JSON.parse(userStr);
+    document.getElementById('userName').textContent = user.name || user.email;
+
+    // Fetch actual balances from API
+    fetch(`https://aurevo-api.kawunlere.workers.dev/api/wallets?userId=${user.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          document.getElementById('earningsBalance').textContent = '₦' + (data.earnings || 0).toLocaleString();
+          document.getElementById('creditBalance').textContent = '₦' + (data.credit || 0).toLocaleString();
+          document.getElementById('savingsBalance').textContent = '₦' + (data.savings || 0).toLocaleString();
+        }
+      })
+      .catch(() => {
+        // Fallback displays
+      });
+  }
+
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    localStorage.removeItem('aurevo_user');
+    localStorage.removeItem('aurevo_token');
+    window.location.href = '/login';
+  });
+</script>
