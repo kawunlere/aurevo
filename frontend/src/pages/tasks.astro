@@ -1,0 +1,170 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Task Marketplace - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <!-- Header -->
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
+      <a href="/dashboard" class="text-sm text-soft/70 hover:text-white flex items-center gap-2">&larr; Dashboard</a>
+      <span class="text-xl font-semibold text-white">Aurevo</span>
+      <a href="/post-task" class="text-xs bg-gold/10 text-gold px-3 py-1.5 rounded-lg hover:bg-gold/20">Post Task</a>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Micro-Task Marketplace</h1>
+        <p class="text-soft/50 text-sm">Perform quick tasks, submit proof, and earn directly into your Earnings Wallet</p>
+      </div>
+
+      <!-- Task Grid -->
+      <div id="taskList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-soft/40 py-12">
+          Loading available tasks...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Proof Submission Modal -->
+  <div id="proofModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-6 z-50">
+    <div class="bg-[#12121a] border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-5">
+      <h3 class="text-lg font-semibold text-white">Submit Task Proof</h3>
+      <p id="modalTaskTitle" class="text-xs text-gold"></p>
+
+      <form id="proofForm" class="space-y-4">
+        <input type="hidden" id="modalTaskId" name="taskId" />
+        <div>
+          <label class="text-xs text-soft/60 mb-1 block">Proof Details / Description</label>
+          <textarea id="proofText" name="proofText" required rows="3"
+            class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-soft text-sm outline-none focus:border-gold/50"
+            placeholder="e.g. Done! My username is @john_doe"></textarea>
+        </div>
+        <div>
+          <label class="text-xs text-soft/60 mb-1 block">Proof Link (Optional)</label>
+          <input type="url" id="proofLink" name="proofLink"
+            class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-soft text-sm outline-none focus:border-gold/50"
+            placeholder="https://..." />
+        </div>
+
+        <p id="modalError" class="text-red-400 text-xs hidden"></p>
+        <p id="modalSuccess" class="text-green-400 text-xs hidden"></p>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" id="closeModalBtn" class="w-1/2 bg-white/5 hover:bg-white/10 text-soft py-2.5 rounded-lg text-xs">Cancel</button>
+          <button type="submit" class="w-1/2 bg-gold text-dark font-medium py-2.5 rounded-lg hover:bg-gold/90 text-xs">Submit Proof</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const taskList = document.getElementById('taskList');
+  const proofModal = document.getElementById('proofModal');
+  const modalTaskTitle = document.getElementById('modalTaskTitle');
+  const modalTaskId = document.getElementById('modalTaskId');
+  const proofForm = document.getElementById('proofForm');
+  const modalError = document.getElementById('modalError');
+  const modalSuccess = document.getElementById('modalSuccess');
+
+  async function loadTasks() {
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/tasks');
+      const tasks = await res.json();
+
+      if (!tasks || tasks.length === 0) {
+        taskList.innerHTML = `
+          <div class="col-span-2 bg-white/5 border border-white/10 rounded-2xl p-10 text-center text-soft/40">
+            No active tasks available right now. Check back soon or <a href="/post-task" class="text-gold underline">post your own task</a>.
+          </div>
+        `;
+        return;
+      }
+
+      taskList.innerHTML = tasks.map(t => `
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] bg-gold/10 text-gold px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">${t.category || 'General'}</span>
+              <span class="text-lg font-semibold text-gold">₦${t.rewardPerWorker}</span>
+            </div>
+            <h3 class="text-white font-medium text-base mb-2">${t.title}</h3>
+            <p class="text-xs text-soft/50 mb-4">${t.requiresProof ? 'Screenshot / Text Proof Required' : 'Instant Verification'}</p>
+          </div>
+          <div class="flex items-center justify-between pt-4 border-t border-white/5">
+            <span class="text-xs text-soft/40">${t.completedWorkers || 0} / ${t.totalWorkers} Slots filled</span>
+            <button onclick="openProofModal('${t.id}', '${t.title.replace(/'/g, "\\'")}')" class="bg-gold text-dark font-medium text-xs px-4 py-2 rounded-lg hover:bg-gold/90 transition-colors">
+              Perform Task
+            </button>
+          </div>
+        </div>
+      `).join('');
+    } catch {
+      taskList.innerHTML = `
+        <div class="col-span-2 bg-white/5 border border-white/10 rounded-2xl p-10 text-center text-red-400">
+          Failed to load marketplace tasks. Please refresh.
+        </div>
+      `;
+    }
+  }
+
+  window.openProofModal = (id, title) => {
+    modalTaskId.value = id;
+    modalTaskTitle.textContent = title;
+    modalError.classList.add('hidden');
+    modalSuccess.classList.add('hidden');
+    proofModal.classList.remove('hidden');
+    proofModal.classList.add('flex');
+  };
+
+  document.getElementById('closeModalBtn').addEventListener('click', () => {
+    proofModal.classList.add('hidden');
+    proofModal.classList.remove('flex');
+  });
+
+  proofForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    modalError.classList.add('hidden');
+    modalSuccess.classList.add('hidden');
+
+    const userStr = localStorage.getItem('aurevo_user');
+    if (!userStr) {
+      window.location.href = '/login';
+      return;
+    }
+    const user = JSON.parse(userStr);
+
+    const data = {
+      taskId: modalTaskId.value,
+      workerId: user.id,
+      proofText: document.getElementById('proofText').value,
+      proofLink: document.getElementById('proofLink').value
+    };
+
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/tasks/submit-proof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.success) {
+        modalSuccess.textContent = 'Proof submitted for review!';
+        modalSuccess.classList.remove('hidden');
+        setTimeout(() => {
+          proofModal.classList.add('hidden');
+          proofModal.classList.remove('flex');
+          proofForm.reset();
+        }, 1500);
+      } else {
+        modalError.textContent = json.error || 'Submission failed';
+        modalError.classList.remove('hidden');
+      }
+    } catch {
+      modalError.textContent = 'Connection error. Try again.';
+      modalError.classList.remove('hidden');
+    }
+  });
+
+  loadTasks();
+</script>

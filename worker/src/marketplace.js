@@ -11,6 +11,29 @@ export async function getWallets(userId, env) {
   };
 }
 
+// Get active tasks for marketplace
+export async function handleGetTasks(request, env, headers) {
+  try {
+    const list = await env.AUREVO.list({ prefix: 'task:' });
+    const tasks = [];
+
+    for (const key of list.keys) {
+      const raw = await env.AUREVO.get(key.name);
+      if (raw) {
+        const t = JSON.parse(raw);
+        // Display tasks marked active or approved
+        if (t.status === 'active' || t.status === 'approved') {
+          tasks.push(t);
+        }
+      }
+    }
+
+    return new Response(JSON.stringify(tasks), { headers });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+  }
+}
+
 // Post a new micro-task
 export async function handlePostTask(request, env, headers) {
   try {
@@ -23,8 +46,8 @@ export async function handlePostTask(request, env, headers) {
 
     // Calculate total cost (reward * workers + 20% platform commission)
     const baseCost = rewardPerWorker * totalWorkers;
-    const proofFee = requiresProof ? (totalWorkers * 5) : 0; // ₦5 extra per worker if screenshot required
-    const totalCost = baseCost + proofFee + (baseCost * 0.20); // 20% admin commission
+    const proofFee = requiresProof ? (totalWorkers * 5) : 0;
+    const totalCost = baseCost + proofFee + (baseCost * 0.20);
 
     // Check user credit wallet
     const wallets = await getWallets(userId, env);
@@ -36,7 +59,7 @@ export async function handlePostTask(request, env, headers) {
     const newCredit = wallets.credit - totalCost;
     await env.AUREVO.put(`wallet:credit:${userId}`, newCredit.toString());
 
-    // Create pending task object
+    // Create task object (Auto-activate for immediate marketplace test)
     const taskId = crypto.randomUUID();
     const task = {
       id: taskId,
@@ -47,13 +70,13 @@ export async function handlePostTask(request, env, headers) {
       totalWorkers,
       completedWorkers: 0,
       requiresProof: !!requiresProof,
-      status: 'pending_approval', // Admin must approve before it goes live
+      status: 'active',
       createdAt: new Date().toISOString()
     };
 
     await env.AUREVO.put(`task:${taskId}`, JSON.stringify(task));
 
-    return new Response(JSON.stringify({ success: true, taskId, message: 'Task submitted for admin approval' }), { status: 201, headers });
+    return new Response(JSON.stringify({ success: true, taskId, message: 'Task published to marketplace' }), { status: 201, headers });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
   }

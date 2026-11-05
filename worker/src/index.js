@@ -1,5 +1,5 @@
 import { register, login } from './auth.js';
-import { getWallets, handlePostTask, handleSubmitProof } from './marketplace.js';
+import { getWallets, handleGetTasks, handlePostTask, handleSubmitProof } from './marketplace.js';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -19,20 +19,15 @@ export default {
     const method = req.method;
 
     try {
-      // Health check
       if (path === '/api/health') {
-        return new Response(JSON.stringify({ status: 'Aurevo API is operational' }), { headers: cors });
+        return new Response(JSON.stringify({ status: 'Aurevo API operational' }), { headers: cors });
       }
-
-      // Auth routes
       if (path === '/api/register' && method === 'POST') {
         return await register(req, env, cors);
       }
       if (path === '/api/login' && method === 'POST') {
         return await login(req, env, cors);
       }
-
-      // Wallet balance route
       if (path === '/api/wallets' && method === 'GET') {
         const userId = url.searchParams.get('userId');
         if (!userId) {
@@ -41,8 +36,9 @@ export default {
         const balances = await getWallets(userId, env);
         return new Response(JSON.stringify(balances), { headers: cors });
       }
-
-      // Task Marketplace routes
+      if (path === '/api/tasks' && method === 'GET') {
+        return await handleGetTasks(req, env, cors);
+      }
       if (path === '/api/tasks/post' && method === 'POST') {
         return await handlePostTask(req, env, cors);
       }
