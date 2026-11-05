@@ -1,0 +1,91 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Sign up - Aurevo">
+  <div class="min-h-screen flex items-center justify-center px-6 py-12">
+    <div class="w-full max-w-md">
+      <a href="/" class="text-xl font-semibold text-white mb-8 block">Aurevo</a>
+      <h2 class="text-2xl font-semibold text-white mb-2">Create your account</h2>
+      <p class="text-soft/50 text-sm mb-8">Start earning today</p>
+
+      <form id="regForm" class="space-y-4">
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Full Name</label>
+          <input type="text" name="name" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300"
+            placeholder="John Doe" />
+        </div>
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Email</label>
+          <input type="email" name="email" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300"
+            placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Phone</label>
+          <input type="tel" name="phone"
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300"
+            placeholder="+234 800 000 0000" />
+        </div>
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Country</label>
+          <select name="country"
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300">
+            <option value="Nigeria">Nigeria</option>
+            <option value="Ghana">Ghana</option>
+            <option value="Kenya">Kenya</option>
+            <option value="South Africa">South Africa</option>
+            <option value="UK">United Kingdom</option>
+            <option value="US">United States</option>
+            <option value="Canada">Canada</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Password</label>
+          <input type="password" name="password" required minlength="6"
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300"
+            placeholder="Min 6 characters" />
+        </div>
+        <p id="errorMsg" class="text-red-400 text-sm hidden"></p>
+        <button type="submit"
+          class="w-full bg-gold text-dark font-medium py-3 rounded-lg hover:bg-gold/90 transition-colors duration-300 text-sm">
+          Create Account
+        </button>
+      </form>
+
+      <p class="text-soft/40 text-sm text-center mt-6">
+        Already have an account? <a href="/login" class="text-gold hover:underline">Log in</a>
+      </p>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const form = document.getElementById('regForm');
+  const err = document.getElementById('errorMsg');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.add('hidden');
+    const data = Object.fromEntries(new FormData(form));
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.ok) {
+        localStorage.setItem('aurevo_token', json.token);
+        localStorage.setItem('aurevo_user', JSON.stringify(json.user));
+        window.location.href = '/dashboard';
+      } else {
+        err.textContent = json.error;
+        err.classList.remove('hidden');
+      }
+    } catch {
+      err.textContent = 'Connection error. Try again.';
+      err.classList.remove('hidden');
+    }
+  });
+</script>

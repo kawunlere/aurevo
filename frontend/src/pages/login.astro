@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Log in - Aurevo">
+  <div class="min-h-screen flex items-center justify-center px-6">
+    <div class="w-full max-w-md">
+      <a href="/" class="text-xl font-semibold text-white mb-8 block">Aurevo</a>
+      <h2 class="text-2xl font-semibold text-white mb-2">Welcome back</h2>
+      <p class="text-soft/50 text-sm mb-8">Log in to your account</p>
+
+      <form id="loginForm" class="space-y-5">
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Email</label>
+          <input type="email" name="email" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300"
+            placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Password</label>
+          <input type="password" name="password" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50 transition-colors duration-300"
+            placeholder="Enter your password" />
+        </div>
+        <p id="errorMsg" class="text-red-400 text-sm hidden"></p>
+        <button type="submit"
+          class="w-full bg-gold text-dark font-medium py-3 rounded-lg hover:bg-gold/90 transition-colors duration-300 text-sm">
+          Log in
+        </button>
+      </form>
+
+      <p class="text-soft/40 text-sm text-center mt-6">
+        No account? <a href="/register" class="text-gold hover:underline">Create one</a>
+      </p>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const form = document.getElementById('loginForm');
+  const err = document.getElementById('errorMsg');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.add('hidden');
+    const data = Object.fromEntries(new FormData(form));
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.ok) {
+        localStorage.setItem('aurevo_token', json.token);
+        localStorage.setItem('aurevo_user', JSON.stringify(json.user));
+        window.location.href = '/dashboard';
+      } else {
+        err.textContent = json.error;
+        err.classList.remove('hidden');
+      }
+    } catch {
+      err.textContent = 'Connection error. Try again.';
+      err.classList.remove('hidden');
+    }
+  });
+</script>
