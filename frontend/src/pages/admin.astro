@@ -1,0 +1,151 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Admin Control Center - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <!-- Header -->
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
+      <a href="/dashboard" class="text-sm text-soft/70 hover:text-white flex items-center gap-2">&larr; Back to Platform</a>
+      <span class="text-xl font-semibold text-gold">Aurevo Admin</span>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Platform Administration</h1>
+        <p class="text-soft/50 text-sm">Review proof submissions and authorize bank payouts</p>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <span class="text-xs text-soft/50 font-medium uppercase tracking-wider block mb-2">Total Users</span>
+          <p id="totalUsers" class="text-3xl font-semibold text-white">0</p>
+        </div>
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <span class="text-xs text-soft/50 font-medium uppercase tracking-wider block mb-2">Pending Task Proofs</span>
+          <p id="pendingProofsCount" class="text-3xl font-semibold text-gold">0</p>
+        </div>
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <span class="text-xs text-soft/50 font-medium uppercase tracking-wider block mb-2">Pending Payouts</span>
+          <p id="pendingWithdrawalsCount" class="text-3xl font-semibold text-gold">0</p>
+        </div>
+      </div>
+
+      <!-- Section 1: Pending Task Proofs -->
+      <div class="mb-12">
+        <h2 class="text-lg font-semibold text-white mb-4">Pending Task Submissions</h2>
+        <div id="proofsContainer" class="space-y-4">
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-soft/40 py-8">
+            Loading pending proofs...
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Pending Bank Withdrawals -->
+      <div>
+        <h2 class="text-lg font-semibold text-white mb-4">Pending Bank Cashouts</h2>
+        <div id="withdrawalsContainer" class="space-y-4">
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-soft/40 py-8">
+            Loading pending withdrawals...
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</Base>
+
+<script>
+  // Admin Check
+  const userStr = localStorage.getItem('aurevo_user');
+  if (!userStr) {
+    window.location.href = '/login';
+  } else {
+    const user = JSON.parse(userStr);
+    if (user.role !== 'admin' && user.email !== 'kawunlere@gmail.com') {
+      alert('Access Denied: Admin Privileges Required');
+      window.location.href = '/dashboard';
+    }
+  }
+
+  // Load Admin Data
+  async function loadAdminData() {
+    try {
+      // Stats
+      const statsRes = await fetch('https://aurevo-api.kawunlere.workers.dev/api/admin/stats');
+      const stats = await statsRes.json();
+      document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+      document.getElementById('pendingProofsCount').textContent = stats.pendingProofs || 0;
+      document.getElementById('pendingWithdrawalsCount').textContent = stats.pendingWithdrawals || 0;
+
+      // Pending Proofs
+      const proofsRes = await fetch('https://aurevo-api.kawunlere.workers.dev/api/admin/proofs');
+      const proofs = await proofsRes.json();
+      const proofsContainer = document.getElementById('proofsContainer');
+
+      if (!proofs || proofs.length === 0) {
+        proofsContainer.innerHTML = '<div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-soft/40">No pending task proofs to review.</div>';
+      } else {
+        proofsContainer.innerHTML = proofs.map(p => `
+          <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <div>
+              <p class="text-xs text-gold font-medium mb-1">${p.task ? p.task.title : 'Task ID: ' + p.taskId}</p>
+              <p class="text-sm text-white mb-2">${p.proofText}</p>
+              ${p.proofLink ? `<a href="${p.proofLink}" target="_blank" class="text-xs text-soft/60 hover:underline">View Proof Link &rarr;</a>` : ''}
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button onclick="actionProof('${p.id}', 'reject')" class="bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-2 rounded-lg text-xs hover:bg-red-500/20">Reject</button>
+              <button onclick="actionProof('${p.id}', 'approve')" class="bg-gold text-dark font-medium px-4 py-2 rounded-lg text-xs hover:bg-gold/90">Approve & Pay</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Pending Withdrawals
+      const withdrawalsRes = await fetch('https://aurevo-api.kawunlere.workers.dev/api/admin/withdrawals');
+      const withdrawals = await withdrawalsRes.json();
+      const withdrawalsContainer = document.getElementById('withdrawalsContainer');
+
+      if (!withdrawals || withdrawals.length === 0) {
+        withdrawalsContainer.innerHTML = '<div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-soft/40">No pending withdrawal cashouts.</div>';
+      } else {
+        withdrawalsContainer.innerHTML = withdrawals.map(w => `
+          <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <div>
+              <span class="text-lg font-semibold text-white">₦${w.amount.toLocaleString()}</span>
+              <p class="text-xs text-soft/70 mt-1">${w.bankName} - ${w.accountNumber} (${w.accountName})</p>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button onclick="actionWithdrawal('${w.id}', 'reject')" class="bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-2 rounded-lg text-xs hover:bg-red-500/20">Reject & Refund</button>
+              <button onclick="actionWithdrawal('${w.id}', 'paid')" class="bg-gold text-dark font-medium px-4 py-2 rounded-lg text-xs hover:bg-gold/90">Mark Paid</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  window.actionProof = async (proofId, action) => {
+    if (!confirm(`Are you sure you want to ${action} this proof submission?`)) return;
+    await fetch('https://aurevo-api.kawunlere.workers.dev/api/admin/proofs/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proofId, action })
+    });
+    loadAdminData();
+  };
+
+  window.actionWithdrawal = async (withdrawalId, action) => {
+    if (!confirm(`Are you sure you want to mark this cashout as ${action}?`)) return;
+    await fetch('https://aurevo-api.kawunlere.workers.dev/api/admin/withdrawals/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ withdrawalId, action })
+    });
+    loadAdminData();
+  };
+
+  loadAdminData();
+</script>

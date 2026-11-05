@@ -1,5 +1,6 @@
 import { register, login } from './auth.js';
 import { getWallets, handleGetTasks, handlePostTask, handleSubmitProof, handleTopup, handleWithdraw } from './marketplace.js';
+import { handleAdminStats, handleGetPendingProofs, handleActionProof, handleGetPendingWithdrawals, handleActionWithdrawal } from './admin.js';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +51,23 @@ export default {
       }
       if (path === '/api/withdraw' && method === 'POST') {
         return await handleWithdraw(req, env, cors);
+      }
+
+      // Admin routes
+      if (path === '/api/admin/stats' && method === 'GET') {
+        return await handleAdminStats(req, env, cors);
+      }
+      if (path === '/api/admin/proofs' && method === 'GET') {
+        return await handleGetPendingProofs(req, env, cors);
+      }
+      if (path === '/api/admin/proofs/action' && method === 'POST') {
+        return await handleActionProof(req, env, cors);
+      }
+      if (path === '/api/admin/withdrawals' && method === 'GET') {
+        return await handleGetPendingWithdrawals(req, env, cors);
+      }
+      if (path === '/api/admin/withdrawals/action' && method === 'POST') {
+        return await handleActionWithdrawal(req, env, cors);
       }
 
       return new Response(JSON.stringify({ error: 'Endpoint not found' }), { status: 404, headers: cors });
