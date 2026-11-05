@@ -1,0 +1,7 @@
+name = "aurevo-api"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+[[kv_namespaces]]
+binding = "AUREVO"
+id = "922ab5fd4b9c449db7e1ba7308d3535d"
