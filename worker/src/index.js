@@ -1,6 +1,7 @@
 import { register, login } from './auth.js';
 import { getWallets, handleGetTasks, handlePostTask, handleSubmitProof, handleTopup, handleWithdraw } from './marketplace.js';
 import { handleAdminStats, handleGetPendingProofs, handleActionProof, handleGetPendingWithdrawals, handleActionWithdrawal } from './admin.js';
+import { handleGetPlans, handleSubscribePlan } from './plans.js';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +52,14 @@ export default {
       }
       if (path === '/api/withdraw' && method === 'POST') {
         return await handleWithdraw(req, env, cors);
+      }
+
+      // Plans routes
+      if (path === '/api/plans' && method === 'GET') {
+        return await handleGetPlans(req, env, cors);
+      }
+      if (path === '/api/subscribe' && method === 'POST') {
+        return await handleSubscribePlan(req, env, cors);
       }
 
       // Admin routes

@@ -1,0 +1,58 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Referral Hub - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
+      <a href="/dashboard" class="text-sm text-soft/70 hover:text-white flex items-center gap-2">&larr; Dashboard</a>
+      <span class="text-xl font-semibold text-white">Aurevo</span>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 py-10">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Referral Program</h1>
+        <p class="text-soft/50 text-sm">Invite friends to Aurevo and earn passive bonuses on their completed tasks</p>
+      </div>
+
+      <!-- Referral Link Box -->
+      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+        <label class="text-xs text-soft/50 uppercase tracking-wider block mb-2 font-medium">Your Invite Link</label>
+        <div class="flex gap-3">
+          <input type="text" id="refLink" readonly
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-gold text-sm outline-none font-mono"
+            value="Loading link..." />
+          <button id="copyBtn" class="bg-gold text-dark font-medium px-6 rounded-lg hover:bg-gold/90 text-sm shrink-0">Copy</button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <span class="text-xs text-soft/50 font-medium uppercase tracking-wider block mb-2">Total Referrals</span>
+          <p id="totalRefs" class="text-3xl font-semibold text-white">0</p>
+        </div>
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <span class="text-xs text-soft/50 font-medium uppercase tracking-wider block mb-2">Referral Earnings</span>
+          <p id="refEarnings" class="text-3xl font-semibold text-gold">₦0.00</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</Base>
+
+<script>
+  const userStr = localStorage.getItem('aurevo_user');
+  if (!userStr) {
+    window.location.href = '/login';
+  } else {
+    const user = JSON.parse(userStr);
+    const linkInput = document.getElementById('refLink');
+    const refUrl = `${window.location.origin}/register?ref=${user.id.slice(0, 8)}`;
+    linkInput.value = refUrl;
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(refUrl);
+      alert('Referral link copied to clipboard!');
+    });
+  }
+</script>
