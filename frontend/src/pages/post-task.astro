@@ -1,0 +1,166 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Post a Task - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <!-- Header -->
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
+      <a href="/dashboard" class="text-sm text-soft/70 hover:text-white flex items-center gap-2">&larr; Back to Dashboard</a>
+      <span class="text-xl font-semibold text-white">Aurevo</span>
+    </header>
+
+    <main class="max-w-xl mx-auto px-6 py-10">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Create a Micro-Task</h1>
+        <p class="text-soft/50 text-sm">Hire real users to engage, follow, or review your content</p>
+      </div>
+
+      <form id="postTaskForm" class="space-y-6">
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Task Title</label>
+          <input type="text" name="title" id="title" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50"
+            placeholder="e.g. Follow my Instagram Page & Like 2 posts" />
+        </div>
+
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Category</label>
+          <select name="category" id="category"
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50">
+            <option value="Social Media">Social Media (Follow, Like, Share)</option>
+            <option value="App Downloads">App Installs & Downloads</option>
+            <option value="Reviews">Reviews & Ratings</option>
+            <option value="Surveys">Surveys & Signups</option>
+            <option value="Other">Other Tasks</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-soft/60 mb-1.5 block">Pay per Worker (₦)</label>
+            <input type="number" name="rewardPerWorker" id="rewardPerWorker" min="10" value="20" required
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50" />
+          </div>
+          <div>
+            <label class="text-sm text-soft/60 mb-1.5 block">Workers Needed</label>
+            <input type="number" name="totalWorkers" id="totalWorkers" min="5" value="10" required
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50" />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 bg-white/5 border border-white/10 p-4 rounded-xl">
+          <input type="checkbox" id="requiresProof" name="requiresProof" class="w-4 h-4 accent-gold cursor-pointer" />
+          <div>
+            <label for="requiresProof" class="text-sm text-white font-medium cursor-pointer">Require Screenshot Proof (+₦5/worker)</label>
+            <p class="text-xs text-soft/40">Workers will be required to upload a screenshot before getting paid</p>
+          </div>
+        </div>
+
+        <!-- Live Cost Breakdown -->
+        <div class="bg-gold/5 border border-gold/20 rounded-xl p-5 space-y-2 text-sm">
+          <div class="flex justify-between text-soft/60">
+            <span>Worker Payout:</span>
+            <span id="workerPayoutText">₦200.00</span>
+          </div>
+          <div class="flex justify-between text-soft/60">
+            <span>Proof Verification Fee:</span>
+            <span id="proofFeeText">₦0.00</span>
+          </div>
+          <div class="flex justify-between text-soft/60">
+            <span>Platform Fee (20%):</span>
+            <span id="platformFeeText">₦40.00</span>
+          </div>
+          <hr class="border-white/10 my-2" />
+          <div class="flex justify-between text-white font-semibold text-base">
+            <span>Total Cost (Deducted from Credit Wallet):</span>
+            <span id="totalCostText" class="text-gold">₦240.00</span>
+          </div>
+        </div>
+
+        <p id="errorMsg" class="text-red-400 text-sm hidden"></p>
+        <p id="successMsg" class="text-green-400 text-sm hidden"></p>
+
+        <button type="submit"
+          class="w-full bg-gold text-dark font-medium py-3.5 rounded-lg hover:bg-gold/90 transition-colors text-sm">
+          Submit Task for Admin Approval
+        </button>
+      </form>
+    </main>
+  </div>
+</Base>
+
+<script>
+  const rewardInput = document.getElementById('rewardPerWorker');
+  const workersInput = document.getElementById('totalWorkers');
+  const proofCheckbox = document.getElementById('requiresProof');
+
+  function calculateCost() {
+    const reward = parseFloat(rewardInput.value) || 0;
+    const workers = parseInt(workersInput.value) || 0;
+    const requiresProof = proofCheckbox.checked;
+
+    const baseCost = reward * workers;
+    const proofFee = requiresProof ? (workers * 5) : 0;
+    const platformFee = baseCost * 0.20;
+    const total = baseCost + proofFee + platformFee;
+
+    document.getElementById('workerPayoutText').textContent = '₦' + baseCost.toFixed(2);
+    document.getElementById('proofFeeText').textContent = '₦' + proofFee.toFixed(2);
+    document.getElementById('platformFeeText').textContent = '₦' + platformFee.toFixed(2);
+    document.getElementById('totalCostText').textContent = '₦' + total.toFixed(2);
+
+    return total;
+  }
+
+  rewardInput.addEventListener('input', calculateCost);
+  workersInput.addEventListener('input', calculateCost);
+  proofCheckbox.addEventListener('change', calculateCost);
+
+  const form = document.getElementById('postTaskForm');
+  const err = document.getElementById('errorMsg');
+  const succ = document.getElementById('successMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.add('hidden');
+    succ.classList.add('hidden');
+
+    const userStr = localStorage.getItem('aurevo_user');
+    if (!userStr) {
+      window.location.href = '/login';
+      return;
+    }
+
+    const user = JSON.parse(userStr);
+    const data = {
+      userId: user.id,
+      title: document.getElementById('title').value,
+      category: document.getElementById('category').value,
+      rewardPerWorker: parseFloat(rewardInput.value),
+      totalWorkers: parseInt(workersInput.value),
+      requiresProof: proofCheckbox.checked
+    };
+
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/tasks/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        succ.textContent = 'Task posted! Awaiting admin approval.';
+        succ.classList.remove('hidden');
+        form.reset();
+        calculateCost();
+      } else {
+        err.textContent = json.error || 'Failed to post task';
+        err.classList.remove('hidden');
+      }
+    } catch {
+      err.textContent = 'Connection error. Check your network.';
+      err.classList.remove('hidden');
+    }
+  });
+</script>
