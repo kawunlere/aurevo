@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Withdraw Earnings - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-xl mx-auto">
+      <a href="/dashboard" class="text-sm text-soft/70 hover:text-white flex items-center gap-2">&larr; Dashboard</a>
+      <span class="text-xl font-semibold text-white">Aurevo</span>
+    </header>
+
+    <main class="max-w-xl mx-auto px-6 py-10">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Withdraw Earnings</h1>
+        <p class="text-soft/50 text-sm">Transfer your task income directly to your bank account</p>
+      </div>
+
+      <form id="withdrawForm" class="space-y-5">
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Amount (₦)</label>
+          <input type="number" id="withdrawAmount" min="1000" placeholder="Min ₦1,000" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50" />
+        </div>
+
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Bank Name</label>
+          <select id="bankName" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50">
+            <option value="">Select Bank</option>
+            <option value="OPay">OPay</option>
+            <option value="Palmpay">Palmpay</option>
+            <option value="Kuda Bank">Kuda Bank</option>
+            <option value="Moniepoint">Moniepoint</option>
+            <option value="Access Bank">Access Bank</option>
+            <option value="GTBank">Guaranty Trust Bank (GTB)</option>
+            <option value="First Bank">First Bank of Nigeria</option>
+            <option value="Zenith Bank">Zenith Bank</option>
+            <option value="UBA">United Bank for Africa (UBA)</option>
+            <option value="Other">Other Nigerian Bank</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Account Number</label>
+          <input type="text" id="accountNumber" maxlength="10" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50"
+            placeholder="10-digit account number" />
+        </div>
+
+        <div>
+          <label class="text-sm text-soft/60 mb-1.5 block">Account Name</label>
+          <input type="text" id="accountName" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50"
+            placeholder="Account holder full name" />
+        </div>
+
+        <p id="withdrawErr" class="text-red-400 text-sm hidden"></p>
+        <p id="withdrawSucc" class="text-green-400 text-sm hidden"></p>
+
+        <button type="submit"
+          class="w-full bg-gold text-dark font-medium py-3.5 rounded-lg hover:bg-gold/90 transition-colors text-sm">
+          Submit Withdrawal Request
+        </button>
+      </form>
+    </main>
+  </div>
+</Base>
+
+<script>
+  const form = document.getElementById('withdrawForm');
+  const err = document.getElementById('withdrawErr');
+  const succ = document.getElementById('withdrawSucc');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.add('hidden');
+    succ.classList.add('hidden');
+
+    const userStr = localStorage.getItem('aurevo_user');
+    if (!userStr) {
+      window.location.href = '/login';
+      return;
+    }
+    const user = JSON.parse(userStr);
+
+    const data = {
+      userId: user.id,
+      amount: parseFloat(document.getElementById('withdrawAmount').value),
+      bankName: document.getElementById('bankName').value,
+      accountNumber: document.getElementById('accountNumber').value,
+      accountName: document.getElementById('accountName').value
+    };
+
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.success) {
+        succ.textContent = 'Withdrawal request submitted! Payout will be processed shortly.';
+        succ.classList.remove('hidden');
+        form.reset();
+      } else {
+        err.textContent = json.error || 'Withdrawal failed';
+        err.classList.remove('hidden');
+      }
+    } catch {
+      err.textContent = 'Connection error. Check network.';
+      err.classList.remove('hidden');
+    }
+  });
+</script>

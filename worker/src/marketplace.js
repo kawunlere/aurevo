@@ -110,3 +110,82 @@ export async function handleSubmitProof(request, env, headers) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
   }
 }
+
+// Handle Credit Wallet Top-up
+export async function handleTopup(request, env, headers) {
+  try {
+    const body = await request.json();
+    const { userId, amount, reference } = body;
+
+    if (!userId || !amount || amount <= 0) {
+      return new Response(JSON.stringify({ error: 'Valid User ID and amount required' }), { status: 400, headers });
+    }
+
+    const currentCredit = parseFloat(await env.AUREVO.get(`wallet:credit:${userId}`) || "0");
+    const newCredit = currentCredit + parseFloat(amount);
+
+    await env.AUREVO.put(`wallet:credit:${userId}`, newCredit.toString());
+
+    // Record transaction
+    const txId = crypto.randomUUID();
+    const tx = {
+      id: txId,
+      userId,
+      type: 'topup',
+      amount: parseFloat(amount),
+      reference: reference || 'direct_topup',
+      status: 'completed',
+      timestamp: new Date().toISOString()
+    };
+    await env.AUREVO.put(`tx:${txId}`, JSON.stringify(tx));
+
+    return new Response(JSON.stringify({ success: true, newCredit, message: 'Credit wallet funded successfully' }), { status: 200, headers });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+  }
+}
+
+// Handle Earnings Withdrawal Request
+export async function handleWithdraw(request, env, headers) {
+  try {
+    const body = await request.json();
+    const { userId, amount, bankName, accountNumber, accountName } = body;
+
+    if (!userId || !amount || !bankName || !accountNumber || !accountName) {
+      return new Response(JSON.stringify({ error: 'All withdrawal details required' }), { status: 400, headers });
+    }
+
+    const withdrawAmount = parseFloat(amount);
+    if (withdrawAmount < 1000) {
+      return new Response(JSON.stringify({ error: 'Minimum withdrawal amount is ₦1,000' }), { status: 400, headers });
+    }
+
+    const earnings = parseFloat(await env.AUREVO.get(`wallet:earnings:${userId}`) || "0");
+    if (earnings < withdrawAmount) {
+      return new Response(JSON.stringify({ error: 'Insufficient earnings balance' }), { status: 400, headers });
+    }
+
+    // Deduct from earnings wallet
+    const newEarnings = earnings - withdrawAmount;
+    await env.AUREVO.put(`wallet:earnings:${userId}`, newEarnings.toString());
+
+    // Record pending withdrawal request for admin approval
+    const withdrawalId = crypto.randomUUID();
+    const requestData = {
+      id: withdrawalId,
+      userId,
+      amount: withdrawAmount,
+      bankName,
+      accountNumber,
+      accountName,
+      status: 'pending_payout',
+      requestedAt: new Date().toISOString()
+    };
+
+    await env.AUREVO.put(`withdrawal:${withdrawalId}`, JSON.stringify(requestData));
+
+    return new Response(JSON.stringify({ success: true, message: 'Withdrawal request submitted' }), { status: 200, headers });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+  }
+}

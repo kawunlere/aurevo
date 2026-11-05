@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Top-Up Credit - Aurevo">
+  <div class="min-h-screen bg-dark">
+    <header class="border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-xl mx-auto">
+      <a href="/dashboard" class="text-sm text-soft/70 hover:text-white flex items-center gap-2">&larr; Dashboard</a>
+      <span class="text-xl font-semibold text-white">Aurevo</span>
+    </header>
+
+    <main class="max-w-xl mx-auto px-6 py-10">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-white">Top-Up Credit Wallet</h1>
+        <p class="text-soft/50 text-sm">Add credits to hire workers and post micro-tasks</p>
+      </div>
+
+      <form id="topupForm" class="space-y-6">
+        <div>
+          <label class="text-sm text-soft/60 mb-2 block">Select Amount (₦)</label>
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <button type="button" onclick="setAmount(1000)" class="bg-white/5 border border-white/10 hover:border-gold/50 rounded-xl p-3 text-white font-medium text-sm transition-colors">₦1,000</button>
+            <button type="button" onclick="setAmount(2500)" class="bg-white/5 border border-white/10 hover:border-gold/50 rounded-xl p-3 text-white font-medium text-sm transition-colors">₦2,500</button>
+            <button type="button" onclick="setAmount(5000)" class="bg-white/5 border border-white/10 hover:border-gold/50 rounded-xl p-3 text-white font-medium text-sm transition-colors">₦5,000</button>
+          </div>
+          <input type="number" id="customAmount" min="500" placeholder="Or enter custom amount (Min ₦500)" required
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-soft text-sm outline-none focus:border-gold/50" />
+        </div>
+
+        <p id="topupErr" class="text-red-400 text-sm hidden"></p>
+        <p id="topupSucc" class="text-green-400 text-sm hidden"></p>
+
+        <button type="submit"
+          class="w-full bg-gold text-dark font-medium py-3.5 rounded-lg hover:bg-gold/90 transition-colors text-sm">
+          Proceed to Fund Credits
+        </button>
+      </form>
+    </main>
+  </div>
+</Base>
+
+<script>
+  window.setAmount = (val) => {
+    document.getElementById('customAmount').value = val;
+  };
+
+  const form = document.getElementById('topupForm');
+  const err = document.getElementById('topupErr');
+  const succ = document.getElementById('topupSucc');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.add('hidden');
+    succ.classList.add('hidden');
+
+    const userStr = localStorage.getItem('aurevo_user');
+    if (!userStr) {
+      window.location.href = '/login';
+      return;
+    }
+    const user = JSON.parse(userStr);
+    const amount = parseFloat(document.getElementById('customAmount').value);
+
+    try {
+      const res = await fetch('https://aurevo-api.kawunlere.workers.dev/api/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, amount })
+      });
+      const json = await res.json();
+      if (json.success) {
+        succ.textContent = `Successfully added ₦${amount.toLocaleString()} to your Credit Wallet!`;
+        succ.classList.remove('hidden');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      } else {
+        err.textContent = json.error || 'Top-up failed';
+        err.classList.remove('hidden');
+      }
+    } catch {
+      err.textContent = 'Connection error. Check network.';
+      err.classList.remove('hidden');
+    }
+  });
+</script>

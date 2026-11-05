@@ -1,5 +1,5 @@
 import { register, login } from './auth.js';
-import { getWallets, handleGetTasks, handlePostTask, handleSubmitProof } from './marketplace.js';
+import { getWallets, handleGetTasks, handlePostTask, handleSubmitProof, handleTopup, handleWithdraw } from './marketplace.js';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -44,6 +44,12 @@ export default {
       }
       if (path === '/api/tasks/submit-proof' && method === 'POST') {
         return await handleSubmitProof(req, env, cors);
+      }
+      if (path === '/api/topup' && method === 'POST') {
+        return await handleTopup(req, env, cors);
+      }
+      if (path === '/api/withdraw' && method === 'POST') {
+        return await handleWithdraw(req, env, cors);
       }
 
       return new Response(JSON.stringify({ error: 'Endpoint not found' }), { status: 404, headers: cors });
